@@ -48,15 +48,21 @@ func mkdirs(force bool, dirs ...string) string {
 	return path
 }
 
-type namePathsMap map[string]*fileInfo
+type baseNameNoExtSet map[string]void
+type void struct{}
 
+var baseNameNoExtSetMember void
+
+type fileList []*fileInfo
 type fileInfo struct {
-	path     string
-	baseName string
+	path          string
+	baseName      string
+	baseNameNoExt string
 }
 
-func generateNamePathsMap(dir string) (namePathsMap, error) {
-	npm := make(namePathsMap)
+func listFiles(dir string) (fileList, error) {
+	npm := make(baseNameNoExtSet)
+	list := make(fileList, 0, 0)
 
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -72,7 +78,8 @@ func generateNamePathsMap(dir string) (namePathsMap, error) {
 		if _, exists := npm[baseNameNoExt]; exists {
 			return errors.New("duplicate " + baseNameNoExt)
 		}
-		npm[baseNameNoExt] = &fileInfo{path, baseName}
+		npm[baseNameNoExt] = baseNameNoExtSetMember
+		list = append(list, &fileInfo{path, baseName, baseNameNoExt})
 
 		return nil
 	})
@@ -81,7 +88,7 @@ func generateNamePathsMap(dir string) (namePathsMap, error) {
 		return nil, err
 	}
 
-	return npm, nil
+	return list, nil
 }
 
 func _mvFiles(src string, dest string) {
@@ -110,20 +117,20 @@ func (cmd *Cmd) mvFiles() error {
 		action = _mvFiles
 	}
 
-	npm, err := generateNamePathsMap(cmd.Src)
+	list, err := listFiles(cmd.Src)
 	if err != nil {
 		return err
 	}
 
 	destRoot := cmd.destRoot()
 
-	for name, oldPath := range npm {
-		md5path := md5Str(name)
+	for _, file := range list {
+		md5path := md5Str(file.baseNameNoExt)
 		dirs, _ := splitStr(md5path, cmd.Segments...)
 		newPath := mkdirs(cmd.Force, dirs...)
-		newPaths := append(destRoot, newPath, oldPath.baseName)
+		newPaths := append(destRoot, newPath, file.baseName)
 		newPath = filepath.Join(newPaths...)
-		action(oldPath.path, newPath)
+		action(file.path, newPath)
 	}
 
 	return nil

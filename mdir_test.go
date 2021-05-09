@@ -1,9 +1,11 @@
 package mdir
 
 import (
-	"os"
+	"path/filepath"
 	"testing"
 )
+
+const srcDir = "/bin"
 
 func TestMd5Str(t *testing.T) {
 	goodMorningMd5 := md5Str("good morning")
@@ -32,27 +34,26 @@ func TestSplitStr(t *testing.T) {
 }
 
 func TestMkdirs(t *testing.T) {
-	wd, _ := os.Getwd()
-	subDir := []string{wd, "a", "c"}
+	subDir := []string{srcDir, "a", "c"}
 	path := mkdirs(false, subDir...)
-	if path != wd+"/"+"a/c" {
+	if path != filepath.Join(srcDir, "a", "c") {
 		t.Error(path)
 	}
 }
 
-func TestGenerateNamePathsMap(t *testing.T) {
-	wd, _ := os.Getwd()
-	namePaths, err := generateNamePathsMap(wd)
+func TestListFiles(t *testing.T) {
+	list, err := listFiles(srcDir)
 	if err != nil {
 		t.Error(err)
 	}
-	for k, v := range namePaths {
-		t.Logf("%s -> %s\n", k, v)
+	for _, file := range list {
+		t.Logf("%s -> %s\n", file.baseNameNoExt, file.path)
 	}
 }
 
 func TestCmd(t *testing.T) {
-	wd, _ := os.Getwd()
-	cmd := Cmd{Src: wd, Dest: "/tmp/mdirtest", Segments: []int{2, 2, 2}}
-	cmd.mvFiles()
+	cmd := Cmd{Src: srcDir, Dest: "/tmp/mdirtest", Segments: []int{2, 2, 2}}
+	if err := cmd.mvFiles(); err != nil {
+		t.Error(err)
+	}
 }
