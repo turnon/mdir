@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,6 +16,8 @@ type Cmd struct {
 	Src      string
 	Dest     string
 	Segments []int
+
+	_destRoot []string
 }
 
 func md5Str(fileName string) string {
@@ -91,16 +94,34 @@ func listFiles(dir string) (fileList, error) {
 	return list, nil
 }
 
-func _mvFiles(src string, dest string) {
-
+func _mvFiles(src string, dest string) error {
+	return nil
 }
 
-func _cpFiles(src string, dest string) {
+func _cpFiles(src string, dest string) error {
+	oldFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer oldFile.Close()
 
+	neoFile, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer neoFile.Close()
+
+	_, err = io.Copy(neoFile, oldFile)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func _dryRunFiles(src string, dest string) {
+func _dryRunFiles(src string, dest string) error {
 	fmt.Printf("%s -> %s\n", src, dest)
+	return nil
 }
 
 func (cmd *Cmd) MvFiles() error {
@@ -108,7 +129,7 @@ func (cmd *Cmd) MvFiles() error {
 		return errors.New("no src or dest")
 	}
 
-	var action func(src string, dest string)
+	var action func(src string, dest string) error
 	if !cmd.Force {
 		action = _dryRunFiles
 	} else if cmd.CopyFile {
@@ -122,23 +143,31 @@ func (cmd *Cmd) MvFiles() error {
 		return err
 	}
 
-	destRoot := cmd.destRoot()
-
 	for _, file := range list {
-		md5path := md5Str(file.baseNameNoExt)
-		dirs, _ := splitStr(md5path, cmd.Segments...)
-		newPath := mkdirs(cmd.Force, dirs...)
-		newPaths := append(destRoot, newPath, file.baseName)
-		newPath = filepath.Join(newPaths...)
-		action(file.path, newPath)
+		newPath := cmd.newPath(file)
+		if err := action(file.path, newPath); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 func (cmd *Cmd) destRoot() []string {
+	if cmd._destRoot != nil {
+		return cmd._destRoot
+	}
 	// add two more cap for root and file
 	root := make([]string, 0, len(cmd.Segments)+2)
 	root = append(root, cmd.Dest)
+	cmd._destRoot = root
 	return root
+}
+
+func (cmd *Cmd) newPath(file *fileInfo) string {
+	md5path := md5Str(file.baseNameNoExt)
+	dirs, _ := splitStr(md5path, cmd.Segments...)
+	newDir := mkdirs(cmd.Force, append(cmd.destRoot(), dirs...)...)
+	newPath := filepath.Join(newDir, file.baseName)
+	return newPath
 }
