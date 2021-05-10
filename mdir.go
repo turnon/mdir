@@ -103,7 +103,7 @@ func _dryRunFiles(src string, dest string) {
 	fmt.Printf("%s -> %s\n", src, dest)
 }
 
-func (cmd *Cmd) mvFiles() error {
+func (cmd *Cmd) MvFiles() error {
 	if cmd.Src == "" || cmd.Dest == "" {
 		return errors.New("no src or dest")
 	}

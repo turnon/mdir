@@ -52,8 +52,12 @@ func TestListFiles(t *testing.T) {
 }
 
 func TestCmd(t *testing.T) {
-	cmd := Cmd{Src: srcDir, Dest: "/tmp/mdirtest", Segments: []int{2, 2, 2}}
-	if err := cmd.mvFiles(); err != nil {
+	cmd := Cmd{
+		Src:      srcDir,
+		Dest:     "/tmp/mdirtest",
+		Segments: []int{2, 2, 2},
+	}
+	if err := cmd.MvFiles(); err != nil {
 		t.Error(err)
 	}
 }
