@@ -95,7 +95,7 @@ func listFiles(dir string) (fileList, error) {
 }
 
 func _mvFiles(src string, dest string) error {
-	return nil
+	return os.Rename(src, dest)
 }
 
 func _cpFiles(src string, dest string) error {
