@@ -56,6 +56,7 @@ func TestCmd(t *testing.T) {
 		Src:      srcDir,
 		Dest:     "./tmp/",
 		Segments: []int{1},
+		Progress: true,
 		// CopyFile: true,
 		// Force:    true,
 	}

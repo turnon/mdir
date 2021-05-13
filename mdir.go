@@ -4,6 +4,8 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+
+	"github.com/cheggaaa/pb/v3"
 )
 
 type void struct{}
@@ -13,6 +15,7 @@ var pathMember void
 type Cmd struct {
 	CopyFile bool
 	Force    bool
+	Progress bool
 	Src      string
 	Dest     string
 	Segments []int
@@ -41,12 +44,22 @@ func (cmd *Cmd) MvFiles() error {
 
 	action := cmd.action()
 
+	// progress bar
+	var bar progress
+	if cmd.Progress {
+		bar = &realProgress{pb.StartNew(len(list))}
+	} else {
+		bar = &fakeProgress{}
+	}
+
 	// mv files
 	for _, file := range list {
 		if err := action(file.oldPath, file.newPath); err != nil {
 			return err
 		}
+		bar.increment()
 	}
+	bar.finish()
 
 	return nil
 }
