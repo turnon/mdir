@@ -2,8 +2,13 @@ package mdir
 
 import (
 	"errors"
+	"os"
 	"path/filepath"
 )
+
+type void struct{}
+
+var pathMember void
 
 type Cmd struct {
 	CopyFile bool
@@ -13,6 +18,7 @@ type Cmd struct {
 	Segments []int
 
 	_destRoot []string
+	_paths    map[string]void
 }
 
 func (cmd *Cmd) MvFiles() error {
@@ -25,11 +31,19 @@ func (cmd *Cmd) MvFiles() error {
 		return err
 	}
 
+	// batch create dirs once
+	cmd._paths = make(map[string]void)
+	for _, file := range list {
+		if err := cmd.generateNewPath(file); err != nil {
+			return err
+		}
+	}
+
 	action := cmd.action()
 
+	// mv files
 	for _, file := range list {
-		newPath := cmd.newPath(file)
-		if err := action(file.path, newPath); err != nil {
+		if err := action(file.oldPath, file.newPath); err != nil {
 			return err
 		}
 	}
@@ -58,10 +72,31 @@ func (cmd *Cmd) destRoot() []string {
 	return root
 }
 
-func (cmd *Cmd) newPath(file *fileInfo) string {
+func (cmd *Cmd) generateNewPath(file *fileInfo) error {
 	md5path := md5Str(file.baseNameNoExt)
-	dirs, _ := splitStr(md5path, cmd.Segments...)
-	newDir := mkdirs(cmd.Force, append(cmd.destRoot(), dirs...)...)
-	newPath := filepath.Join(newDir, file.baseName)
-	return newPath
+	dirs, err := splitStr(md5path, cmd.Segments...)
+	if err != nil {
+		return err
+	}
+
+	newDir, err := cmd.mkdirs(append(cmd.destRoot(), dirs...))
+	if err != nil {
+		return err
+	}
+
+	file.newPath = filepath.Join(newDir, file.baseName)
+	return nil
+}
+
+func (cmd *Cmd) mkdirs(path []string) (string, error) {
+	pathStr := filepath.Join(path...)
+	if cmd.Force {
+		if _, exists := cmd._paths[pathStr]; !exists {
+			if err := os.MkdirAll(pathStr, os.ModePerm); err != nil {
+				return "", err
+			}
+		}
+	}
+	cmd._paths[pathStr] = pathMember
+	return pathStr, nil
 }

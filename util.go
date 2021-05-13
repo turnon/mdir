@@ -41,15 +41,15 @@ func mkdirs(force bool, dirs ...string) string {
 }
 
 type baseNameNoExtSet map[string]void
-type void struct{}
 
 var baseNameNoExtSetMember void
 
 type fileList []*fileInfo
 type fileInfo struct {
-	path          string
+	oldPath       string
 	baseName      string
 	baseNameNoExt string
+	newPath       string
 }
 
 func listFiles(dir string) (fileList, error) {
@@ -71,7 +71,7 @@ func listFiles(dir string) (fileList, error) {
 			return errors.New("duplicate " + baseNameNoExt)
 		}
 		npm[baseNameNoExt] = baseNameNoExtSetMember
-		list = append(list, &fileInfo{path, baseName, baseNameNoExt})
+		list = append(list, &fileInfo{oldPath: path, baseName: baseName, baseNameNoExt: baseNameNoExt})
 
 		return nil
 	})

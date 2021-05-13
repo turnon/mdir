@@ -47,7 +47,7 @@ func TestListFiles(t *testing.T) {
 		t.Error(err)
 	}
 	for _, file := range list {
-		t.Logf("%s -> %s\n", file.baseNameNoExt, file.path)
+		t.Logf("%s -> %s\n", file.baseNameNoExt, file.oldPath)
 	}
 }
 
@@ -55,7 +55,7 @@ func TestCmd(t *testing.T) {
 	cmd := Cmd{
 		Src:      srcDir,
 		Dest:     "./tmp/",
-		Segments: []int{2, 2, 2},
+		Segments: []int{1},
 		// CopyFile: true,
 		// Force:    true,
 	}
