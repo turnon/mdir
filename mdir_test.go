@@ -12,7 +12,7 @@ func TestPathOfName(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if path != "2/b8/495/good morning" {
+	if path != "2/b8/495" {
 		t.Error(path)
 	}
 }
