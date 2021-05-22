@@ -9,6 +9,16 @@ import (
 	"strings"
 )
 
+func PathOfName(name string, lens ...int) (string, error) {
+	str := md5Str(name)
+	dirs, err := splitStr(str, lens...)
+	if err != nil {
+		return "", err
+	}
+	path := filepath.Join(dirs...)
+	return path, err
+}
+
 func md5Str(fileName string) string {
 	hash := md5.Sum([]byte(fileName))
 	return fmt.Sprintf("%x", hash)

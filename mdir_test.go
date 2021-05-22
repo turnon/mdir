@@ -7,6 +7,16 @@ import (
 
 const srcDir = "/bin"
 
+func TestPathOfName(t *testing.T) {
+	path, err := PathOfName("good morning", 1, 2, 3)
+	if err != nil {
+		t.Error(err)
+	}
+	if path != "2/b8/495/good morning" {
+		t.Error(path)
+	}
+}
+
 func TestMd5Str(t *testing.T) {
 	goodMorningMd5 := md5Str("good morning")
 	if goodMorningMd5 != "2b849500e4585dab4196ec9a415edf8f" {

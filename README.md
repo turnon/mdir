@@ -10,6 +10,8 @@ $ go get github.com/turnon/mdir
 
 ## usage
 
+move files:
+
 ```go
 cmd := mdir.Cmd{
     Src:      "/path/to/src",
@@ -20,4 +22,10 @@ cmd := mdir.Cmd{
 }
 
 cmd.MvFiles()
+```
+
+calculate path:
+
+```go
+path, err := mdir.PathOfName("river.jpg", 1, 2, 3)
 ```
